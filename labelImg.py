@@ -237,10 +237,13 @@ class MainWindow(QMainWindow, WindowMixin):
                         'space', 'verify', u'Verify Image')
 
         save = action('&Save', self.saveFile,
-                      'Ctrl+S', 'save', u'Save labels to file', enabled=False)
+                      's', 'save', u'Save labels to file', enabled=False)
 
         save_format = action('&PascalVOC', self.change_format,
                       'Ctrl+', 'format_voc', u'Change save format', enabled=True)
+
+        next_and_save = action('&NextSave', self.next_and_save,
+                               'x', 'save2', u'Save labels to file', enabled=True)
 
         saveAs = action('&Save As', self.saveFileAs,
                         'Ctrl+Shift+S', 'save-as', u'Save labels to a different file', enabled=False)
@@ -358,7 +361,8 @@ class MainWindow(QMainWindow, WindowMixin):
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
                                   close, create, createMode, editMode),
-                              onShapesPresent=(saveAs, hideAll, showAll))
+                              onShapesPresent=(saveAs, hideAll, showAll),
+                              next_and_save = next_and_save)
 
         self.menus = struct(
             file=self.menu('&File'),
@@ -407,11 +411,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openNextImg, next_and_save, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, save, save_format, None,
+            open, opendir, changeSavedir, openNextImg, next_and_save, openPrevImg, save, save_format, None,
             createMode, editMode, None,
             hideAll, showAll)
 
@@ -531,6 +535,12 @@ class MainWindow(QMainWindow, WindowMixin):
             self.dock.setFeatures(self.dock.features() | self.dockFeatures)
         else:
             self.dock.setFeatures(self.dock.features() ^ self.dockFeatures)
+
+    def next_and_save(self):
+        self.saveFile()
+        self.openNextImg()
+        self.createShape()
+        print("YO MAN")
 
     def populateModeActions(self):
         if self.beginner():
@@ -1225,7 +1235,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if self.dirty is True:
                     self.saveFile()
             else:
-                self.changeSavedirDialog()
+                #self.changeSavedirDialog()
                 return
 
         if not self.mayContinue():
@@ -1250,7 +1260,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if self.dirty is True:
                     self.saveFile()
             else:
-                self.changeSavedirDialog()
+                #self.changeSavedirDialog()
                 return
 
         if not self.mayContinue():
@@ -1309,6 +1319,7 @@ class MainWindow(QMainWindow, WindowMixin):
         dlg.setDefaultSuffix(LabelFile.suffix[1:])
         dlg.setAcceptMode(QFileDialog.AcceptSave)
         filenameWithoutExtension = os.path.splitext(self.filePath)[0]
+        return filenameWithoutExtension #HACK
         dlg.selectFile(filenameWithoutExtension)
         dlg.setOption(QFileDialog.DontUseNativeDialog, False)
         if dlg.exec_():
